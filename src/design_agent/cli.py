@@ -504,10 +504,6 @@ def manifest() -> None:
     click.echo(build_manifest(root, pack).to_json())
 
 
-if __name__ == "__main__":
-    main()
-
-
 @sandbox.command("publish")
 @click.option("--fs-gib", default=16, show_default=True, help="Filesystem size of the snapshot.")
 @click.option("--yes", is_flag=True, help="Publish without asking.")
@@ -713,3 +709,21 @@ def test_db() -> None:
     click.echo(
         "db: ok (" + ("Postgres" if settings.database_url else "SQLite in workspace/state") + ")"
     )
+
+
+@main.command("codex-card")
+@click.argument("request")
+@click.option("--thread", default=None, help="Revise a previous local Codex design.")
+@click.option("--size", default="1200x627", show_default=True)
+def codex_card(request: str, thread: str | None, size: str) -> None:
+    """Create a local static card using your Codex ChatGPT login."""
+    from design_agent.codex_local import create
+
+    try:
+        create(_root(), request, thread, size)
+    except (OSError, ValueError, KeyError, subprocess.TimeoutExpired) as exc:
+        raise click.ClickException(f"Task incomplete: {exc}") from exc
+
+
+if __name__ == "__main__":
+    main()
